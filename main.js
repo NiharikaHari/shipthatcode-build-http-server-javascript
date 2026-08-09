@@ -1,4 +1,4 @@
-const lines = require('fs').readFileSync(0, 'utf8').split('\n');
+// const lines = require('fs').readFileSync(0, 'utf8').split('\n');
 // 01 - Request Line
 // const METHODS = new Set(["GET","POST","PUT","DELETE","HEAD","OPTIONS","PATCH"]);
 
@@ -19,22 +19,37 @@ const lines = require('fs').readFileSync(0, 'utf8').split('\n');
 // }
 
 // 02 - Request Headers
-for (const raw of lines) {
-  const line = raw.replace(/\r$/, "");
-  if (!line) break;
+// for (const raw of lines) {
+//   const line = raw.replace(/\r$/, "");
+//   if (!line) break;
   
-  if(!line.includes(":")) {
-    console.log(`ERR malformed: ${line}`);
-    continue;
-  }
+//   if(!line.includes(":")) {
+//     console.log(`ERR malformed: ${line}`);
+//     continue;
+//   }
 
-  const idx = line.indexOf(":");
-  const name = line.slice(0, idx);
-  const value = line.slice(idx+1);
+//   const idx = line.indexOf(":");
+//   const name = line.slice(0, idx);
+//   const value = line.slice(idx+1);
 
-  const formattedName = name.toLocaleLowerCase().trim();
-  const formattedValue = value.trim();
+//   const formattedName = name.toLocaleLowerCase().trim();
+//   const formattedValue = value.trim();
 
-  console.log(`${formattedName}: ${formattedValue}`);
+//   console.log(`${formattedName}: ${formattedValue}`);
 
+// }
+
+// 03 - Request Body
+const data = require('fs').readFileSync(0, 'utf8').split('\n');
+const out = [];
+let i = 0;
+while (i < data.length) {
+  const sizeLine = data[i].trim();
+  if (!sizeLine) { i++; continue; }
+  const size = parseInt(sizeLine, 16);
+  if (isNaN(size)) { i++; continue; }
+  if (size === 0 ) break;
+  out.push(data[i+1].slice(0, size));
+  i += 2;
 }
+process.stdout.write(out.join("") + "\n");
