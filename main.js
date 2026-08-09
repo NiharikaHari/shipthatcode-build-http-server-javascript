@@ -2,16 +2,15 @@ const lines = require('fs').readFileSync(0, 'utf8').split('\n');
 const METHODS = new Set(["GET","POST","PUT","DELETE","HEAD","OPTIONS","PATCH"]);
 
 function isVersion(s) {
-  // TODO: return true only if s matches /^HTTP\/\d+\.\d+$/
-  return s.startsWith("HTTP/");
+  let matchResult = s.search(/^HTTP\/\d+\.\d+$/);
+  return matchResult !== -1;
 }
 
 for (const raw of lines) {
   const line = raw.replace(/\r$/, "");
   if (!line) continue;
   const parts = line.split(" ");
-  // TODO: 3 parts, method in METHODS, path starts with "/", version valid
-  if (parts.length !== 3 || !METHODS.has(parts[0]) || !parts[1].startsWith("/")) {
+  if (parts.length !== 3 || !METHODS.has(parts[0]) || !parts[1].startsWith("/") || !isVersion(parts[2])) {
     console.log("INVALID");
     continue;
   }
