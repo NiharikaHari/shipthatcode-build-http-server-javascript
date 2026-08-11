@@ -71,47 +71,53 @@
 // process.stdout.write(parts.join("\r\n"));
 
 // 05 - Static Routing
-const data = require('fs').readFileSync(0, 'utf8').split('\n');
-const blankIdx = data.indexOf("");
+// const data = require('fs').readFileSync(0, 'utf8').split('\n');
+// const blankIdx = data.indexOf("");
 
-const routes = new Map();
-const allow = new Map();
+// const routes = new Map();
+// const allow = new Map();
 
-for (const line of data.slice(0, blankIdx)) {
-  if (!line) continue;
-  const parts = line.split(' ');
-  if (parts.length < 3) continue;
+// for (const line of data.slice(0, blankIdx)) {
+//   if (!line) continue;
+//   const parts = line.split(' ');
+//   if (parts.length < 3) continue;
 
-  const method = parts[0];
-  const path = parts[1];
-  const handler = parts[2];
+//   const method = parts[0];
+//   const path = parts[1];
+//   const handler = parts[2];
 
-  routes.set(method + ' ' + path, handler);
+//   routes.set(method + ' ' + path, handler);
 
-  if (!allow.has(path)) allow.set(path, new Set());
+//   if (!allow.has(path)) allow.set(path, new Set());
 
-  allow.get(path).add(method);
-}
+//   allow.get(path).add(method);
+// }
 
-for (const line of data.slice(blankIdx + 1)) {
-  if (!line) continue;
-  const parts = line.split(' ');
+// for (const line of data.slice(blankIdx + 1)) {
+//   if (!line) continue;
+//   const parts = line.split(' ');
 
-  const method = parts[0];
-  const path = parts.length < 2 ? '/' : parts[1].split('?')[0];
-  
-  // Check if path is in allow - 404
-  if (!allow.has(path)) {
-    console.log(404);
-    continue;
-  }
+//   const method = parts[0];
+//   const path = parts.length < 2 ? '/' : parts[1].split('?')[0];
 
-  // Check if method is allowed - 405
-  if (!allow.get(path).has(method)) {
-    console.log(405);
-    continue;
-  }
+//   // Check if path is in allow - 404
+//   if (!allow.has(path)) {
+//     console.log(404);
+//     continue;
+//   }
 
-  // get handler
-  console.log(`200 ${routes.get(method + ' ' + path)}`);
-}
+//   // Check if method is allowed - 405
+//   if (!allow.get(path).has(method)) {
+//     console.log(405);
+//     continue;
+//   }
+
+//   // get handler
+//   console.log(`200 ${routes.get(method + ' ' + path)}`);
+// }
+
+// 06 - Path Params
+
+const data = require('fs').readFileSync('test.txt', 'utf8').split('\n');
+const blankIdx = data.indexOf('');
+console.log(blankIdx);
