@@ -118,6 +118,92 @@
 
 // 06 - Path Params
 
-const data = require('fs').readFileSync('test.txt', 'utf8').split('\n');
+const data = require('fs').readFileSync(0, 'utf8').split('\n');
 const blankIdx = data.indexOf('');
-console.log(blankIdx);
+
+const routes = [];
+
+for (const line of data.slice(0, blankIdx)) {
+  if(!line) continue;
+  const parts = line.split(' ');
+  if (parts.length < 3) continue;
+
+  const method = parts[0];
+  const pathSegments = parts[1].split('/').filter(Boolean); 
+  // filter(Boolean) removes all falsey values, i assume this is to handle paths with only '/',
+  //  or those that end with '/'
+  const handler = parts[2];
+  routes.push([method, pathSegments, handler]);
+}
+
+const match = (reqMethod, reqPath) => {
+  // Separate path into path and query strings
+  const qs = {};
+  const qIdx = reqPath.indexOf('?');
+  if(qIdx >= 0) {
+    const queryParts = reqPath.slice(qIdx+1).split("&");
+    for(const part of queryParts) {
+      const [key, value] = part.split('=');
+      qs[key] = value;
+    }
+
+    reqPath = reqPath.slice(0, qIdx);
+
+  }
+
+  const reqPathSegments = reqPath.split('/').filter(Boolean);
+
+  for(const [method, pathSegments, handler] of routes) {
+    if(method !== reqMethod || pathSegments.length !== reqPathSegments.length)
+      continue;
+
+    const bindings = {};
+    let pathSegmentsMatch = true;
+    // For each path segment, if it is a binding take any value, else it should be exact match
+    for(let i=0; i< pathSegments.length ; ++i) {
+      if(pathSegments[i].startsWith('{') && pathSegments[i].endsWith('}')) {
+        bindings[pathSegments[i].slice(1, -1)] = reqPathSegments[i];
+      }
+      else if(pathSegments[i] !== reqPathSegments[i]) {
+        pathSegmentsMatch = false;
+        break;
+      }
+    } 
+
+    if(pathSegmentsMatch) {
+      return [handler, bindings, qs];
+    }
+  }
+
+  return [null, null, null];
+}
+
+
+for (const line of data.slice(blankIdx + 1)) {
+  if(!line) continue;
+  const parts = line.split(' ');
+
+  const method = parts[0];
+  const path = parts[1];
+  
+  const [handler, bindings, qs] = match(method, path);
+
+  if(!handler) {
+    console.log('404');
+    continue;
+  }
+
+  // construct output
+  const output = [handler];
+
+  for(const key of Object.keys(bindings).sort()){
+    output.push(key + '=' + bindings[key]);
+  }
+
+  for(const key of Object.keys(qs).sort()){
+    output.push(key + '=' + qs[key]);
+  }
+
+  console.log(output.join(' '));
+
+}
