@@ -55,17 +55,63 @@
 // process.stdout.write(out.join("") + "\n");
 
 // 04 - Build response
-const data = require('fs').readFileSync(0, 'utf8').split('\n');
-const STATUS_TEXT = { 200: "OK", 201: "Created", 204: "No Content", 301: "Moved Permanently", 302: "Found", 304: "Not Modified", 400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found", 405: "Method Not Allowed", 500: "Internal Server Error" };
-if (!data[0] || !data[0].trim()) process.exit(0);
-const [status, hc] = data[0].split(' ').map(Number);
-const headers = data.slice(1, 1 + hc);
-let body = data.slice(1 + hc).join('\n');
-while (body.endsWith('\n')) body = body.slice(0, -1);
+// const data = require('fs').readFileSync(0, 'utf8').split('\n');
+// const STATUS_TEXT = { 200: "OK", 201: "Created", 204: "No Content", 301: "Moved Permanently", 302: "Found", 304: "Not Modified", 400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found", 405: "Method Not Allowed", 500: "Internal Server Error" };
+// if (!data[0] || !data[0].trim()) process.exit(0);
+// const [status, hc] = data[0].split(' ').map(Number);
+// const headers = data.slice(1, 1 + hc);
+// let body = data.slice(1 + hc).join('\n');
+// while (body.endsWith('\n')) body = body.slice(0, -1);
 
-const hasCL = headers.some(h => h.toLocaleLowerCase().startsWith('content-length'));
-const parts = [`HTTP/1.1 ${status} ${STATUS_TEXT[status] || 'Unknown'}`, ...headers];
-if (!hasCL) parts.push(`Content-Length: ${Buffer.byteLength(body)}`);
-parts.push("", body);
-// CRLF, not LF
-process.stdout.write(parts.join("\r\n"));
+// const hasCL = headers.some(h => h.toLocaleLowerCase().startsWith('content-length'));
+// const parts = [`HTTP/1.1 ${status} ${STATUS_TEXT[status] || 'Unknown'}`, ...headers];
+// if (!hasCL) parts.push(`Content-Length: ${Buffer.byteLength(body)}`);
+// parts.push("", body);
+// // CRLF, not LF
+// process.stdout.write(parts.join("\r\n"));
+
+// 05 - Static Routing
+const data = require('fs').readFileSync(0, 'utf8').split('\n');
+const blankIdx = data.indexOf("");
+
+const routes = new Map();
+const allow = new Map();
+
+for (const line of data.slice(0, blankIdx)) {
+  if (!line) continue;
+  const parts = line.split(' ');
+  if (parts.length < 3) continue;
+
+  const method = parts[0];
+  const path = parts[1];
+  const handler = parts[2];
+
+  routes.set(method + ' ' + path, handler);
+
+  if (!allow.has(path)) allow.set(path, new Set());
+
+  allow.get(path).add(method);
+}
+
+for (const line of data.slice(blankIdx + 1)) {
+  if (!line) continue;
+  const parts = line.split(' ');
+
+  const method = parts[0];
+  const path = parts.length < 2 ? '/' : parts[1].split('?')[0];
+  
+  // Check if path is in allow - 404
+  if (!allow.has(path)) {
+    console.log(404);
+    continue;
+  }
+
+  // Check if method is allowed - 405
+  if (!allow.get(path).has(method)) {
+    console.log(405);
+    continue;
+  }
+
+  // get handler
+  console.log(`200 ${routes.get(method + ' ' + path)}`);
+}
